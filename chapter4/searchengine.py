@@ -1,12 +1,19 @@
+import gzip
 import urllib2
+import random
+
+import jieba
 from BeautifulSoup import *
 from urlparse import urljoin
 from pysqlite2 import dbapi2 as sqlite
+
+from StringIO import StringIO
+
 import nn
 mynet=nn.searchnet('nn.db')
 
 # Create a list of words to ignore
-ignorewords={'the':1,'of':1,'to':1,'and':1,'a':1,'in':1,'is':1,'it':1}
+ignorewords={'the':1,'of':1,'to':1,'and':1,'a':1,'in':1,'is':1,'it':1,"'":1}
 
 
 class crawler:
@@ -31,8 +38,13 @@ class crawler:
       "insert into %s (%s) values ('%s')" % (table,field,value))
       return cur.lastrowid
     else:
-      return res[0] 
+      return res[0]
 
+      # Seperate the words by any non-whitespace character
+  def separatewords(self, text):
+     # return [w for w in jieba.cut(text)]
+     splitter = re.compile('\\W*')
+     return [s.lower() for s in splitter.split(text) if s != '']
 
   # Index an individual page
   def addtoindex(self,url,soup):
@@ -58,7 +70,8 @@ class crawler:
   # Extract the text from an HTML page (no tags)
   def gettextonly(self,soup):
     v=soup.string
-    if v==Null:   
+    # if v==NULL:
+    if v == None:
       c=soup.contents
       resulttext=''
       for t in c:
@@ -68,11 +81,6 @@ class crawler:
     else:
       return v.strip()
 
-  # Seperate the words by any non-whitespace character
-  def separatewords(self,text):
-    splitter=re.compile('\\W*')
-    return [s.lower() for s in splitter.split(text) if s!='']
-
     
   # Return true if this url is already indexed
   def isindexed(self,url):
@@ -80,7 +88,7 @@ class crawler:
   
   # Add a link between two pages
   def addlinkref(self,urlFrom,urlTo,linkText):
-    words=self.separateWords(linkText)
+    words=self.separatewords(linkText)
     fromid=self.getentryid('urllist','url',urlFrom)
     toid=self.getentryid('urllist','url',urlTo)
     if fromid==toid: return
@@ -96,15 +104,35 @@ class crawler:
   # as we go
   def crawl(self,pages,depth=2):
     for i in range(depth):
+      USER_AGENTS = [
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36",
+      ]
+
+      HEADER = {
+        'User-Agent': random.choice(USER_AGENTS),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        # 'Accept-Language': 'zh-CN,zh;q=0.8',
+        'Connection': 'keep-alive',
+        # 'Accept-Encoding': 'gzip, deflate',
+      }
+
       newpages={}
       for page in pages:
         try:
-          c=urllib2.urlopen(page)
+          req = urllib2.Request(page, headers=HEADER)
+          response=urllib2.urlopen(req)
         except:
           print "Could not open %s" % page
           continue
         try:
-          soup=BeautifulSoup(c.read())
+          # if response.info().get('Content-Encoding') == 'gzip':
+          #   buf = StringIO(response.read())
+          #   f = gzip.GzipFile(fileobj=buf)
+          #   data = f.read()
+          # else :
+          data=response.read()
+          # b=a.decode('gbk').encode('utf-8')
+          soup=BeautifulSoup(data)
           self.addtoindex(page,soup)
   
           links=soup('a')
@@ -113,13 +141,18 @@ class crawler:
               url=urljoin(page,link['href'])
               if url.find("'")!=-1: continue
               url=url.split('#')[0]  # remove location portion
-              if url[0:4]=='http' and not self.isindexed(url):
+
+              # Dick select current page only
+              pattern = re.compile(r'.*\.hao123\.com')
+              match = pattern.match(url)
+              if url[0:4]=='http' and not self.isindexed(url) and match:
                 newpages[url]=1
               linkText=self.gettextonly(link)
               self.addlinkref(page,url,linkText)
   
           self.dbcommit()
-        except:
+        except Exception,e:
+          print e
           print "Could not parse page %s" % page
 
       pages=newpages
@@ -168,6 +201,7 @@ class crawler:
         self.con.execute(
         'update pagerank set score=%f where urlid=%d' % (pr,urlid))
       self.dbcommit()
+
 
 class searcher:
   def __init__(self,dbname):
@@ -304,3 +338,13 @@ class searcher:
     nnres=mynet.getresult(wordids,urlids)
     scores=dict([(urlids[i],nnres[i]) for i in range(len(urlids))])
     return self.normalizescores(scores)
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,34 @@
+#++++++++++++++++++++
+#
+#++++++++++++++++++++
+
+%SUB%DS_New_File_Path=/hsbc/rpm/hbhk/data/
+%SUB%DS_File_Path=/hsbc/rpm/hase/data/
+%SUB%Ver=
+%SUB%SF_FIle_Path=/hsbc/rpm/hbhk/data/mainframe/
+
+
+#+++++++++++++++++++++
+# JobRPM042
+#+++++++++++++++++++++
+%DS_PATH%JobRPM042_In_Ds1=^DS_File_Path^rpm_cust_s013_j042.ds
+%DISP=DELETE
+
+%DS_PATH%JobRPM042_In_Ds2=^DS_File_Path^rpm_cust_s013_j043.ds
+%DISP=DELETE
+
+%DS_PATH%JobRPM042_Out_Ds=^DS_File_Path^rpm_cust_s014_j042.ds
+%DISP=KEEP
+
+#+++++++++++++++++++++
+# JobRPM043
+#+++++++++++++++++++++
+%DS_PATH%JobRPM043_In_Ds1=^DS_File_Path^rpm_cust_s014_j042.ds
+%DISP=KEEP
+
+%DS_PATH%JobRPM043_In_Ds2=^DS_File_Path^rpm_cust_s014_j042.ds
+%DISP=KEEP
+
+%DS_PATH%JobRPM043_Out_Ds=^DS_File_Path^rpm_cust_s014_j043.ds
+%DISP=KEEP
+
