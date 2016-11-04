@@ -2,6 +2,8 @@
 #!/usr/bin/env python
 import re
 
+# http://v2.189shop.cn/Activity/BaseOrder/gzzjhygwap/index.htm?qd=wahy&adsl=
+
 __author__ = 'dick'
 
 url='www.hao123.com'
