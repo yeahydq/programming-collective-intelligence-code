@@ -1,5 +1,5 @@
 from random import random,randint
-import math
+
 
 def wineprice(rating,age):
   peak_age=rating-50
@@ -55,6 +55,7 @@ def getdistances(data,vec1):
   # Sort by distance
   distancelist.sort()
   return distancelist
+
 
 def knnestimate(data,vec1,k=5):
   # Get sorted distances
@@ -210,3 +211,102 @@ def probabilitygraph(data,vec1,high,k=5,weightf=gaussian,ss=5.0):
     
   plot(t1,smoothed)
   show()
+
+
+def testPrice():
+  print wineprice(95.0,3.0)
+  print wineprice(95.0, 40.0)
+  print wineprice(95.0, 50.0)
+  print wineprice(95.0, 52.0)
+  print wineprice(95.0, 53.0)
+  print wineprice(95.0, 54.0)
+  wines=wineset1()
+  print wines[1]
+  print wines[2]
+  print euclidean(wines[1]['input'],wines[2]['input'])
+
+def testKnnEst():
+  data=wineset1()
+  print knnestimate(data,(95,3))
+  print wineprice(85.0,3.0)
+
+def testDivide():
+  a=[i for i in range(100)]
+  b,c=dividedata(a)
+  print len(b),len(c)
+
+def knn3(data,vect):
+  return knnestimate(data,vect,k=3)
+
+def testRescaleValidate():
+  data=wineset2()
+  print crossvalidate(knnestimate,data)
+  sdata=rescale(data,[10,10,0,0.5])
+  print crossvalidate(knnestimate,sdata)
+
+import optimization
+
+def testValidate():
+  data=wineset1()
+  print "Knn:",crossvalidate(knnestimate,data)
+  print "weightKnn:",crossvalidate(weightedknn,data)
+def testGenScale():
+    data = wineset2()
+    print crossvalidate(knnestimate, data)
+    print crossvalidate(weightedknn, data)
+    weighdomain=[(0,20)]*4
+    costfunction=createcostfunction(knnestimate,data)
+
+    #rating,age,aisle,bottlesize
+    lenghuo_S=optimization.annealingoptimize(weighdomain, costfunction,step=2)
+    print lenghuo_S
+    lenghuo_data=rescale(data,lenghuo_S)
+    print crossvalidate(knn3,lenghuo_data)
+
+    climbHill_S = optimization.hillclimb(weighdomain, costfunction)
+    print climbHill_S
+    climbHill_data = rescale(data, climbHill_S)
+    print crossvalidate(knn3, climbHill_data)
+
+def testProbgguess():
+  data=wineset3()
+  vec=[99.0,20.0]
+  print wineprice(99.0,20.0)
+  print weightedknn(data,vec)
+
+  print probguess(data,vec,40,80)
+  print probguess(data, vec, 80, 120)
+  print probguess(data, vec, 120, 1200)
+  print probguess(data, vec, 30, 120)
+  cumulativegraph(data,vec,200)
+
+def testPrint_1():
+  from pylab import *
+  a=array([1,2,3,4])
+  b=array([4,2,3,1])
+  plot(a,b)
+  show()
+  t1=arange(0.0,10.0,0.1)
+  plot(t1,sin(t1))
+  show()
+
+def testPrint_2():
+  import matplotlib.pyplot as plt
+  N = 50
+  x = np.random.rand(N)
+  y = np.random.rand(N)
+  area = np.pi * (15 * np.random.rand(N)) ** 2  # 0 to 15 point radiuses
+  color = 2 * np.pi * np.random.rand(N)
+  plt.scatter(x, y, s=area, c=color, alpha=0.5, cmap=plt.cm.hsv)
+  plt.show()
+
+if __name__ == '__main__' :
+  #testPrice()
+  #testKnnEst()
+  # testValidate()
+  # testDivide()
+  # testRescaleValidate()
+  # testGenScale()
+  # testProbgguess()
+  # testPrint_1()
+  testPrint_2()

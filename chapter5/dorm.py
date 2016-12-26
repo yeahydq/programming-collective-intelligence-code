@@ -1,5 +1,6 @@
 import random
 import math
+from optimization  import *
 
 # The dorms, each of which has two available spaces
 dorms=['Zeus','Athena','Hercules','Bacchus','Pluto']
@@ -55,3 +56,22 @@ def dormcost(vec):
     del slots[x]
     
   return cost
+
+if __name__ == '__main__' :
+    # vet=[0 for i in range(10)]
+    # printsolution(vet)
+    # print
+    # vet = [9,8,7,6,5,4,3,2,1,0]
+    # printsolution(vet)
+    # print
+    # vet = [1,1,1,1,1,1,1,1,1,0]
+    # printsolution(vet)
+
+    s=randomoptimize(domain,dormcost,1000)
+    print "random :",dormcost(s)
+    printsolution(s)
+
+    # printsolution(hillclimb(domain, dormcost))
+    s=annealingoptimize(domain, dormcost)
+    print "anneal :",dormcost(s)
+    printsolution(s)

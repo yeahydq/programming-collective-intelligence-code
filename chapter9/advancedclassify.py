@@ -11,7 +11,7 @@ def loadmatch(f,allnum=False):
   for line in file(f):
     rows.append(matchrow(line.split(','),allnum))
   return rows
- 
+
 from pylab import *
 def plotagematches(rows):
   xdm,ydm=[r.data[0] for r in rows if r.match==1],\
@@ -132,7 +132,7 @@ def scaledata(rows):
   # Return the new data and the function
   return newrows,scaleinput
 
-
+# Page 213
 def rbf(v1,v2,gamma=10):
   dv=[v1[i]-v2[i] for i in range(len(v1))]
   l=veclength(dv)
@@ -166,3 +166,30 @@ def getoffset(rows,gamma=10):
   sum1=sum(sum([rbf(v1,v2,gamma) for v1 in l1]) for v2 in l1)
   
   return (1.0/(len(l1)**2))*sum1-(1.0/(len(l0)**2))*sum0
+
+def testDotpointClassisify(avgs):
+    print dpclassify([30, 30], avgs)
+    print dpclassify([30, 25], avgs)
+    print dpclassify([25, 40], avgs)
+    print dpclassify([48, 20], avgs)
+
+def testnlClassify(vets):
+    offset=getoffset(vets)
+    print nlclassify([30,30],vets,offset)
+    print nlclassify([30, 25], vets, offset)
+    print nlclassify([25, 40], vets, offset)
+    print nlclassify([48, 20], vets, offset)
+
+def testNumeric():
+    numericDs=loadnumerical()
+    print numericDs[0].data
+
+if __name__ == '__main__':
+    ageonly=loadmatch('agesonly.csv',allnum=True)
+    matchmaker=loadmatch('matchmaker.csv',allnum=False)
+    # plotagematches(ageonly)
+    avgs=lineartrain(ageonly)
+    print avgs
+    # testDotpointClassisify(avgs)
+    testnlClassify(ageonly)
+    testNumeric()

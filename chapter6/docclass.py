@@ -1,10 +1,15 @@
+#coding:utf-8
+
+import os
 from pysqlite2 import dbapi2 as sqlite
 import re
 import math
 
+
+
 def getwords(doc):
   splitter=re.compile('\\W*')
-  print doc
+  # print doc
   # Split the words by non-alpha characters
   words=[s.lower() for s in splitter.split(doc) 
           if len(s)>2 and len(s)<20]
@@ -19,7 +24,12 @@ class classifier:
     # Counts of documents in each category
     self.cc={}
     self.getfeatures=getfeatures
-    
+    try:
+      os.remove('test.db')
+    except Exception,e:
+      pass
+    self.setdb('test.db')
+
   def setdb(self,dbfile):
     self.con=sqlite.connect(dbfile)    
     self.con.execute('create table if not exists fc(feature,category,count)')
@@ -77,6 +87,7 @@ class classifier:
     self.incc(cat)
     self.con.commit()
 
+    # 基本概率
   def fprob(self,f,cat):
     if self.catcount(cat)==0: return 0
 
@@ -84,6 +95,7 @@ class classifier:
     # category divided by the total number of items in this category
     return self.fcount(f,cat)/self.catcount(cat)
 
+    # 加权后的概率
   def weightedprob(self,f,cat,prf,weight=1.0,ap=0.5):
     # Calculate current probability
     basicprob=prf(f,cat)
@@ -126,6 +138,7 @@ class naivebayes(classifier):
     return self.thresholds[cat]
   
   def classify(self,item,default=None):
+    print("checking : %s"%item)
     probs={}
     # Find the category with the highest probability
     max=0.0
@@ -184,6 +197,7 @@ class fisherclassifier(classifier):
   def getminimum(self,cat):
     if cat not in self.minimums: return 0
     return self.minimums[cat]
+
   def classify(self,item,default=None):
     # Loop through looking for the best result
     best=default
@@ -203,3 +217,58 @@ def sampletrain(cl):
   cl.train('buy pharmaceuticals now','bad')
   cl.train('make quick money at the online casino','bad')
   cl.train('the quick brown fox jumps','good')
+
+def testTrain():
+  cl=classifier(getwords)
+  # cl.setdb('test.db')
+  cl.train('Nobody owns the water.','good')
+  cl.train('the quick rabbit jumps fences','good')
+  cl.train('buy pharmaceuticals now','bad')
+  cl.train('make quick money at the online casino','bad')
+  cl.train('the quick quick brown fox jumps','good')
+  print cl.fcount('quick','good')
+  print cl.fcount('fox', 'good')
+  print cl.fprob('quick','good')
+
+
+  print cl.fcount('quick','good')
+  print cl.catcount('good')
+
+def testBeyes():
+  cl=naivebayes(getwords)
+  sampletrain(cl)
+  print cl.prob('quick rabbit','good')
+  print cl.prob('quick rabbit', 'bad')
+
+def testBeyesWithClassifier():
+  cl=naivebayes(getwords)
+  sampletrain(cl)
+  print cl.classify('quick rabbit',default='unknown')
+  print cl.classify('quick money',default='unknown')
+  cl.setthreshold('bad',3.0)
+  print cl.classify('quick money',default='unknown')
+  for i in range(10):
+    sampletrain(cl)
+  print cl.classify('quick money',default='unknown')
+
+def testFisherClassifier():
+  cl=fisherclassifier(getwords)
+  sampletrain(cl)
+  print cl.cprob('quick','good')
+  print cl.cprob('quick','bad')
+  print cl.fisherprob('quick rabbit','good')
+  print cl.fisherprob('quick rabbit','bad')
+  cl.setminimum('good',0.8)
+  cl.setminimum('bad',0.8)
+  print cl.classify('quick rabbit', 'unknown')
+  for i in range(10):
+    sampletrain(cl)
+  print cl.fisherprob('quick rabbit','good')
+  print cl.classify('quick rabbit', 'unknown')
+
+if __name__ == '__main__':
+  # testTrain()
+  # testBeyes()
+  # testBeyesWithClassifier()
+  testFisherClassifier()
+

@@ -73,5 +73,12 @@ def drawnetwork(sol):
 
   img.show()
 
+import optimization
 
 domain=[(10,370)]*(len(people)*2)
+
+if __name__ == "__main__":
+    sol=optimization.annealingoptimize(domain,crosscount)
+    print sol
+    drawnetwork(sol)
+    sol.setdea

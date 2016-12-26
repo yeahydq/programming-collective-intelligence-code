@@ -248,3 +248,25 @@ def buildtree(rows,scoref=entropy):
                         tb=trueBranch,fb=falseBranch)
   else:
     return decisionnode(results=uniquecounts(rows))
+
+
+if __name__ == '__main__':
+    print divideset(my_data,2,"yes")
+    print giniimpurity(my_data)
+    print entropy(my_data)
+    set1,set2=divideset(my_data,2,'yes')
+    print giniimpurity(set1), giniimpurity(set2)
+    print entropy(set1), entropy(set2)
+
+    tree=buildtree(my_data,entropy)
+    printtree(tree)
+    drawtree(tree,jpeg='treeview.jpg')
+
+    print classify(['google','UK','yes',18],tree)
+    print classify(['google','UK','yes',21],tree)
+
+    #prune(tree,1.0)
+    #printtree(tree)
+
+    print mdclassify(['google', None, 'yes', None], tree)
+    print mdclassify(['google', 'UK', None, None], tree)

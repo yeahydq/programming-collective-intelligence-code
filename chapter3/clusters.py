@@ -14,7 +14,8 @@ def readfile(filename):
     # The data for this row is the remainder of the row
     data.append([float(x) for x in p[1:]])
   return rownames,colnames,data
-
+# rownames, colnames, data=readfile('blogdata.txt')
+# print "a"
 
 from math import sqrt
 
@@ -102,6 +103,11 @@ def printclust(clust,labels=None,n=0):
   if clust.left!=None: printclust(clust.left,labels=labels,n=n+1)
   if clust.right!=None: printclust(clust.right,labels=labels,n=n+1)
 
+# blognames, words, data=readfile('blogdata.txt')
+# clust=hcluster(data)
+# printclust(clust,labels=blognames)
+
+
 def getheight(clust):
   # Is this an endpoint? Then the height is just 1
   if clust.left==None and clust.right==None: return 1
@@ -162,6 +168,11 @@ def drawnode(draw,clust,x,y,scaling,labels):
     # If this is an endpoint, draw the item label
     draw.text((x+5,y-7),labels[clust.id],(0,0,0))
 
+# blognames, words, data=readfile('blogdata.txt')
+# clust=hcluster(data)
+# printclust(clust,labels=blognames)
+# drawdendrogram( clust,blognames,jpeg='blogcluster.jpg')
+
 def rotatematrix(data):
   newdata=[]
   for i in range(len(data[0])):
@@ -169,16 +180,29 @@ def rotatematrix(data):
     newdata.append(newrow)
   return newdata
 
+# blognames, words, data=readfile('blogdata.txt')
+# clust=hcluster(rotatematrix(data))
+# printclust(clust,labels=words)
+# drawdendrogram( clust,words,jpeg='worldcluster.jpg')
+
+
 import random
 
 def kcluster(rows,distance=pearson,k=4):
-  # Determine the minimum and maximum values for each point
-  ranges=[(min([row[i] for row in rows]),max([row[i] for row in rows])) 
-  for i in range(len(rows[0]))]
-
+  # Determine the minimum and maximum values for each column
+  ranges=[(min([row[i] for row in rows]),max([row[i] for row in rows]))
+  for i in range(len(rows[0]))
+          ]
+  # clusters=[[x1,y1],[x2,y2],[x3,y3]....]
   # Create k randomly placed centroids
-  clusters=[[random.random()*(ranges[i][1]-ranges[i][0])+ranges[i][0] 
-  for i in range(len(rows[0]))] for j in range(k)]
+  clusters=[
+    [
+      random.random() * (ranges[i][1]-ranges[i][0])
+        + ranges[i][0]
+      for i in range(len(rows[0]))
+     ]
+      for j in range(k)
+    ]
   
   lastmatches=None
   for t in range(100):
@@ -197,11 +221,14 @@ def kcluster(rows,distance=pearson,k=4):
     # If the results are the same as last time, this is complete
     if bestmatches==lastmatches: break
     lastmatches=bestmatches
-    
+
+    # bestmatches: keep the related matched(row number) for each center point
     # Move the centroids to the average of their members
     for i in range(k):
+      # Dick : Avgs={[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]}
       avgs=[0.0]*len(rows[0])
       if len(bestmatches[i])>0:
+        # Dick: sum (the point's each column) within the same matched pointes
         for rowid in bestmatches[i]:
           for m in range(len(rows[rowid])):
             avgs[m]+=rows[rowid][m]
@@ -210,6 +237,11 @@ def kcluster(rows,distance=pearson,k=4):
         clusters[i]=avgs
       
   return bestmatches
+
+# blognames, words, data=readfile('blogdata.txt')
+# kclust=kcluster(data,k=10)
+# for k in range(10):
+#   print k,[blognames[r] for r in kclust[k]]
 
 def tanamoto(v1,v2):
   c1,c2,shr=0,0,0
@@ -220,6 +252,10 @@ def tanamoto(v1,v2):
     if v1[i]!=0 and v2[i]!=0: shr+=1 # in both
   
   return 1.0-(float(shr)/(c1+c2-shr))
+
+# want, people, data=readfile('zebo.txt')
+# clust=hcluster(data,distance=tanamoto)
+# drawdendrogram( clust,want,jpeg='zebo.jpg')
 
 def scaledown(data,distance=pearson,rate=0.01):
   n=len(data)
@@ -235,10 +271,16 @@ def scaledown(data,distance=pearson,rate=0.01):
   lasterror=None
   for m in range(0,1000):
     # Find projected distances
+    # 寻找投影后的距离
     for i in range(n):
       for j in range(n):
-        fakedist[i][j]=sqrt(sum([pow(loc[i][x]-loc[j][x],2) 
-                                 for x in range(len(loc[i]))]))
+        fakedist[i][j]=sqrt(sum(
+                                [pow(loc[i][x]-loc[j][x],2)
+                                 for x in range(len(loc[i]))
+                                 ]
+                                )
+                            )
+
   
     # Move points
     grad=[[0.0,0.0] for i in range(n)]
@@ -248,6 +290,7 @@ def scaledown(data,distance=pearson,rate=0.01):
       for j in range(n):
         if j==k: continue
         # The error is percent difference between the distances
+        # rate = (current - target) / current distances
         errorterm=(fakedist[j][k]-realdist[j][k])/realdist[j][k]
         
         # Each point needs to be moved away from or towards the other
@@ -278,3 +321,7 @@ def draw2d(data,labels,jpeg='mds2d.jpg'):
     y=(data[i][1]+0.5)*1000
     draw.text((x,y),labels[i],(0,0,0))
   img.save(jpeg,'JPEG')  
+
+blognames,words,data=readfile('blogdata.txt')
+coords=scaledown(data)
+draw2d(coords,blognames,jpeg='blogs2d.jpg')

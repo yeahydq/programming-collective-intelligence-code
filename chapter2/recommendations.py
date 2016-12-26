@@ -6,6 +6,8 @@ import os.path
 
 import re
 
+import time
+
 critics={'Lisa Rose': {'Lady in the Water': 2.5, 'Snakes on a Plane': 3.5,
  'Just My Luck': 3.0, 'Superman Returns': 3.5, 'You, Me and Dupree': 2.5, 
  'The Night Listener': 3.0},
@@ -88,6 +90,9 @@ def topMatches(prefs,person,n=5,similarity=sim_pearson):
 # Gets recommendations for a person by using a weighted average
 # of every other user's rankings
 def getRecommendations(prefs,person,similarity=sim_pearson):
+  if person not in prefs :
+    return "N/A"
+    # return
   totals={}
   simSums={}
   # loop rows
@@ -204,14 +209,16 @@ def loadMovieLens(path='/data/movielens'):
 def loadMovieLens_new(path='/data/movielens'):
   # Get movie titles
   movies = {}
-  for line in open(path + '/u.item'):
-    (id, title) = line.split('|')[0:2]
+  for line in open(path + '/movies.dat'):
+    # (id, title) = line.split('||')[0:2]
+    (id, title) = re.split('::',line)[0:2]
     movies[id] = title
 
   # Load data
   prefs = {}
-  for line in open(path + '/u.data'):
-    (user, movieid, rating, ts) = line.split('\t')
+  for line in open(path + '/ratings.dat'):
+    # (user, movieid, rating, ts) = line.split('||')
+    (user, movieid, rating, ts) = re.split('::',line)
     prefs.setdefault(user, {})
     prefs[user][movies[movieid]] = float(rating)
   return prefs
@@ -261,33 +268,41 @@ def loadMovieLens_new(path='/data/movielens'):
 
 # res2=getRecommendedItems(critics,result,'Toby')
 # print res2
+def final_test(loadmethod=loadMovieLens):
+  a=loadmethod('/dick/PycharmProject/programming-collective-intelligence-code/data/movielens')
+  print a['87']
+  print "method A"
+  # start = time.clock()
+  # for id in range(1,1000):
+  #   print "user:"+str(id)+":",\
+  #   getRecommendations(a,str(id))[0:30]
+  # end = time.clock()
+  # print("The function run time is : %.03f seconds" % (end - start))
 
-a=loadMovieLens('/dick/PycharmProject/programming-collective-intelligence-code/data/movielens')
-print a['87']
-print "method A"
-# print getRecommendations(a,'87')[0:30]
+  print "method b"
+  start = time.clock()
+  js_file = "output.json"
+  if not os.path.exists(js_file):
+    # Writing JSON data
+    with open(js_file, 'w') as f:
+      itemsim = calculateSimilarItems(a, n=50)
+      json.dump(itemsim, f)
+  else:
+    # Reading data back
+    with open(js_file, 'r') as f:
+      itemsim = json.load(f)
 
-print "method b"
-# json_str = json.dumps(itemsim)
-# json_str = json.dumps(unicode(itemsim,errors='ignore'))
+  for id in range(1,1000):
+    print "user:"+str(id)+":",\
+      getRecommendedItems(a,itemsim,str(id))[0:30]
+  # # print getRecommendedItems(a,itemsim,'87')[0:30]
+  # # print getRecommendedItems(a,itemsim,'1')[0:30]
+  # # print getRecommendedItems(a,itemsim,'87')[0:30]
+  end = time.clock()
+  print("The function run time is : %.03f seconds" % (end - start))
 
-js_file = "output.json"
-# with open(js_file, 'w') as f:
-#   itemsim = calculateSimilarItems(a, n=50)
-#   json.dump(itemsim, f)
+# final_test()
+final_test(loadMovieLens_new)
 
-if not os.path.exists(js_file):
-  # Writing JSON data
-  with open(js_file, 'w') as f:
-    itemsim = calculateSimilarItems(a, n=50)
-    json.dump(itemsim, f)
-else:
-  # Reading data back
-  with open(js_file, 'r') as f:
-    itemsim = json.load(f)
-
-for id in range(1,1000):
-  print "user:"+str(id)+":",getRecommendedItems(a,itemsim,str(id))[0:30]
-# # print getRecommendedItems(a,itemsim,'87')[0:30]
-# # print getRecommendedItems(a,itemsim,'1')[0:30]
-# # print getRecommendedItems(a,itemsim,'87')[0:30]
+# a = loadMovieLens_new('/dick/PycharmProject/programming-collective-intelligence-code/data/movielens')
+# print a['87']

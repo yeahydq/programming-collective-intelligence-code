@@ -1,7 +1,7 @@
 import time
 import random
 import math
-
+import sys
 people = [('Seymour','BOS'),
           ('Franny','DAL'),
           ('Zooey','CAK'),
@@ -42,9 +42,16 @@ def schedulecost(sol):
   for d in range(len(sol)/2):
     # Get the inbound and outbound flights
     origin=people[d][1]
-    outbound=flights[(origin,destination)][int(sol[d*2])]
-    returnf=flights[(destination,origin)][int(sol[d*2+1])]
-    
+    try:
+      outbound=flights[(origin,destination)][int(sol[d*2])]
+      returnf=flights[(destination,origin)][int(sol[d*2+1])]
+    except Exception, e:
+      print e.message,str(d)
+      print sol
+      print flights[(origin,destination)]
+      print flights[(destination,origin)]
+      sys.exit(1)
+
     # Total price is the price of all outbound and return flights
     totalprice+=outbound[2]
     totalprice+=returnf[2]
@@ -68,10 +75,10 @@ def schedulecost(sol):
   
   return totalprice+totalwait
 
-def randomoptimize(domain,costf):
+def randomoptimize(domain,costf,times=1000):
   best=999999999
   bestr=None
-  for i in range(0,1000):
+  for i in range(0,times):
     # Create a random solution
     r=[float(random.randint(domain[i][0],domain[i][1])) 
        for i in range(len(domain))]
@@ -82,7 +89,8 @@ def randomoptimize(domain,costf):
     # Compare it to the best one so far
     if cost<best:
       best=cost
-      bestr=r 
+      bestr=r
+  print "Best cost is: %d"%best
   return r
 
 def hillclimb(domain,costf):
@@ -196,6 +204,38 @@ def geneticoptimize(domain,costf,popsize=50,step=1,
         pop.append(crossover(ranked[c1],ranked[c2]))
     
     # Print current best score
-    print scores[0][0]
+    # print scores[0][0]
     
   return scores[0][1]
+
+def testRandomPick():
+  domain=[(0,9)] * (len(people)*2)
+  print printschedule(randomoptimize(domain,schedulecost,10**2))
+  print printschedule(randomoptimize(domain,schedulecost,10**3))
+  print printschedule(randomoptimize(domain, schedulecost, 10 ** 4))
+  print printschedule(randomoptimize(domain, schedulecost, 10 ** 6))
+
+def testHillClimb():
+    domain = [(0, 9)] * (len(people) * 2)
+    s=hillclimb(domain, schedulecost)
+    print schedulecost(s)
+    print printschedule(s)
+
+def testGeneticOpt():
+    domain = [(0, 9)] * (len(people) * 2)
+    s=geneticoptimize(domain, schedulecost)
+    print schedulecost(s)
+    print printschedule(s)
+
+def testLenghuo():
+    domain = [(0, 9)] * (len(people) * 2)
+    s=annealingoptimize(domain, schedulecost)
+    print schedulecost(s)
+    print printschedule(s)
+
+
+if __name__ == '__main__':
+  # testRandomPick()
+  # testHillClimb()
+  testLenghuo()
+  testGeneticOpt()

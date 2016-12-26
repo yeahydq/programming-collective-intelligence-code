@@ -14,3 +14,17 @@ from deliciousrec import *
 delusers=initializeUserDict('programming')
 fillItems(delusers)
 print delusers.values()
+
+
+def gen():
+    print 'enter'
+    yield 1
+    print 'next'
+    return
+    print 'next 2'
+    yield 2
+    print 'next 3'
+
+
+for i in gen():
+    print i

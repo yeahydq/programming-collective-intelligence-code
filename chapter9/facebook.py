@@ -137,3 +137,7 @@ class fbsession:
       arefriends+=pa
     return arefriends,rows
   
+if __name__=='__main__':
+  s=fbsession()
+  answer,data=s.makedataset()
+  print answer
